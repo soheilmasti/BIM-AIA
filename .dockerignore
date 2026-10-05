@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.git
+.gitignore
+tests/
+snapshots/test_*
+revit_plugin/bin/
+revit_plugin/obj/
+navisworks_plugin/bin/
+navisworks_plugin/obj/

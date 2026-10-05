@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>BIM Assist Copilot</Name>
+    <Assembly>BIMAssist.Revit.dll</Assembly>
+    <FullClassName>BIMAssist.Revit.App</FullClassName>
+    <ClientId>F8B3A0D1-6C2A-4E9B-98A1-9876543210AB</ClientId>
+    <VendorId>BIM_ASSIST</VendorId>
+    <VendorDescription>BIM Assist - AI Multi-Agent Copilot for Revit &amp; Navisworks</VendorDescription>
+  </AddIn>
+</RevitAddIns>

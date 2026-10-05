@@ -1,0 +1,33 @@
+# ماتریس الزامات پارامترها و کدهای طبقه‌بندی (Data & IDS Rules)
+version: "1.0.0"
+discipline: "Data_And_Information"
+
+rules:
+  - id: "DATA-PARAM-UNICLASS-01"
+    description: "الزام پر بودن پارامتر Uniclass Classification برای تمام فمیلی‌های مدل"
+    standard_ref: "BEP Section 6.2 / ISO 19650"
+    target_categories:
+      - "Pipes"
+      - "Ducts"
+      - "Mechanical Equipment"
+      - "Plumbing Fixtures"
+      - "Cable Trays"
+    required_parameters:
+      - name: "UniclassPr_Code"
+        pattern: "^[A-Z]{2}_[0-9]{2}_[0-9]{2}(_[0-9]{2})?$"
+      - name: "UniclassPr_Description"
+        pattern: ".+"
+    severity: "High"
+    auto_fix_action: "tool_batch_update_parameters"
+
+  - id: "DATA-PARAM-SYSTEM-02"
+    description: "الزام نام‌گذاری مخفف سیستم (System Abbreviation) در تمام شاخه‌ها"
+    standard_ref: "BEP Section 5.1"
+    target_categories:
+      - "Pipes"
+      - "Ducts"
+    required_parameters:
+      - name: "System Abbreviation"
+        disallowed_values: ["", "None", "Undefined"]
+    severity: "Medium"
+    auto_fix_action: "tool_batch_update_parameters"

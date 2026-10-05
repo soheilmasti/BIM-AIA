@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>BIM AIA</Name>
+    <Assembly>BIM_AIA.dll</Assembly>
+    <FullClassName>BIM_AIA.App</FullClassName>
+    <ClientId>F8B3A0D1-6C2A-4E9B-98A1-9876543210AB</ClientId>
+    <VendorId>BIM_AIA</VendorId>
+    <VendorDescription>BIM AIA - Advanced AI Copilot for Autodesk Revit 2026</VendorDescription>
+  </AddIn>
+</RevitAddIns>

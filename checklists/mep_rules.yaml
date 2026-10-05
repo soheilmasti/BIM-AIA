@@ -1,0 +1,50 @@
+# ماتریس قوانین اتمیک چک‌لیست تأسیسات (MEP Atomic Rules)
+version: "1.0.0"
+discipline: "MEP"
+
+rules:
+  - id: "MEP-PLUMB-SLOPE-01"
+    system_classification: "Sanitary"
+    category: "Pipes"
+    description: "کنترل حداقل شیب لوله‌های افقی فاضلاب بر اساس قطر نامی (DN)"
+    standard_ref: "CTE DB-HS 4 / UNE-EN 12056"
+    conditions:
+      - condition: "diameter_mm <= 110"
+        min_slope: 0.015 # 1.5%
+        recommended_slope: 0.020 # 2.0%
+      - condition: "diameter_mm > 110"
+        min_slope: 0.010 # 1.0%
+        recommended_slope: 0.015
+    severity: "Critical"
+    auto_fix_action: "tool_set_pipe_slope"
+
+  - id: "MEP-PLUMB-CONN-02"
+    system_classification: "Any"
+    category: "Fittings_And_Pipes"
+    description: "کنترل وجود کانکتورهای باز در مسیر لوله‌کشی و عدم افتادگی ونت"
+    standard_ref: "ISO 19650 Quality Check"
+    conditions:
+      - condition: "has_open_connector == True and element_type != 'Fixture'"
+    severity: "High"
+    auto_fix_action: "tool_cap_or_reconnect"
+
+  - id: "MEP-HVAC-INSUL-03"
+    system_classification: "Supply_Air"
+    category: "Ducts"
+    description: "الزام وجود عایق حرارتی/صوتی بر روی کانال‌های هوای رفت در فضاهای غیرتهویه‌شده و رایزرها"
+    standard_ref: "CTE DB-HE 2 / RITE"
+    conditions:
+      - condition: "is_conditioned_space == False and insulation_thickness_mm < 25"
+    severity: "Medium"
+    auto_fix_action: "tool_apply_insulation"
+
+  - id: "MEP-CLASH-BEAM-04"
+    system_classification: "Any"
+    category: "Structural_Penetrations"
+    description: "کنترل عبور لوله‌ها و داکت‌ها از عناصر سازه‌ای بتنی و تعبیه اسلیو استاندارد با تلرانس ۵۰ میلیمتر"
+    standard_ref: "CTE DB-SI / Structural Coordination"
+    conditions:
+      - condition: "penetrates_structural_element == True and has_approved_sleeve == False"
+    severity: "Critical"
+    clearance_mm: 50
+    auto_fix_action: "tool_place_sleeve_at_clash"

@@ -1,0 +1,55 @@
+# ==========================================
+# .gitignore for BIM AIA
+# ==========================================
+
+# --- .NET & Visual Studio Build Outputs ---
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+*.resharper.user
+*.pidb
+*.pdb
+*.cache
+*.FileListAbsolute.txt
+*.Up2Date
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+env/
+.env
+
+# --- Temporary Logs & Caches ---
+*.log
+crash_log.txt
+@AutomationLog.txt
+
+# --- Large BIM Model Files ---
+*.rvt
+*.rfa
+*.nwd
+*.nwf
+*.ifc
+
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+.vscode/
+.idea/

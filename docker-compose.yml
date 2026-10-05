@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  bim-assist-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bim_assist_copilot_hub
+    restart: unless-stopped
+    ports:
+      - "5055:5055"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - HOST=0.0.0.0
+      - PORT=5055
+    volumes:
+      # نگهداری پایدار اسناد پروژه و حافظه یادگیری
+      - ./project_docs:/app/project_docs
+      - ./snapshots:/app/snapshots
+      - ./checklists:/app/checklists
+      - ./project_memory.json:/app/project_memory.json
+    env_file:
+      - ../.env

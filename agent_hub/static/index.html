@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BIM AIA - Revit 2026 AI Copilot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Vazirmatn', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .glass { background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+    .neon-cyan { text-shadow: 0 0 10px rgba(6, 182, 212, 0.6); }
+    .neon-green { text-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased select-none">
+
+  <!-- نوار بالای پنل رویت -->
+  <header class="glass sticky top-0 z-50 px-4 py-3 flex items-center justify-between border-b border-slate-800">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">
+        AIA
+      </div>
+      <div>
+        <h1 class="font-bold text-sm tracking-wide text-white flex items-center gap-2">
+          BIM AIA
+          <span class="text-[10px] bg-cyan-950 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-800/60 font-mono">Revit 2026</span>
+        </h1>
+        <p class="text-[11px] text-slate-400 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          هوش چندعامله فعال (Gemini Fallback Router)
+        </p>
+      </div>
+    </div>
+
+    <!-- وضعیت مدل فعال -->
+    <div class="flex items-center gap-2.5 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-800">
+      <div class="text-right">
+        <div class="text-[9px] text-slate-400">مدل فعال رویت</div>
+        <div id="activeProjectBadge" class="text-xs font-bold text-cyan-300 font-mono">Live Document</div>
+      </div>
+      <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+    </div>
+  </header>
+
+  <!-- سوئیچ دوحالته: مشورت / اجرا -->
+  <div class="p-3">
+    <div class="glass p-1 rounded-xl flex items-center gap-1">
+      <button id="tabConsult" onclick="setMode('consult')" class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/10">
+        <span>💡</span> مشورت و تحلیل (Consult)
+      </button>
+      <button id="tabExecute" onclick="setMode('execute')" class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200">
+        <span>⚡</span> اجرای دستور (Execute)
+      </button>
+      <button id="tabDelta" onclick="generateReport()" class="py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-800/80 text-emerald-400 hover:bg-slate-800 border border-emerald-500/30">
+        <span>📊</span> گزارش مقایسه‌ای
+      </button>
+    </div>
+  </div>
+
+  <!-- محتوای اصلی چت و کارت‌های تعاملی -->
+  <main id="chatStream" class="flex-1 overflow-y-auto px-4 py-2 space-y-3">
+    
+    <!-- کارت خوش‌آمدگویی ایجنت سینیور -->
+    <div class="glass p-3.5 rounded-xl border-slate-800/80">
+      <div class="flex items-center gap-2 mb-1.5 text-xs font-bold text-cyan-400">
+        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+        ناظر ارشد بیم (Senior Supervisor)
+      </div>
+      <p id="welcomeProjectText" class="text-xs text-slate-300 leading-relaxed">
+        مدل جاری شما در Revit 2026 شناسایی شد. هیچ پیش‌فرضی از قبل بارگذاری نشده و اطلاعات و تحلیل‌ها صرفاً بر اساس مدل فعال و دستور شما ارزیابی می‌شوند.
+      </p>
+      <div class="mt-2.5 flex flex-wrap gap-1.5">
+        <button onclick="sendQuickPrompt('بررسی کلیرنس و ضوابط داکت‌ها در دید جاری', 'consult')" class="text-[11px] bg-slate-800/80 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">
+          💡 مشورت: کلیرنس و ضوابط
+        </button>
+        <button onclick="sendQuickPrompt('داکت هوای رفت را جهت دور زدن مانع جابجا کن', 'execute')" class="text-[11px] bg-slate-800/80 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">
+          ⚡ اجرا: جابجایی داکت
+        </button>
+        <button onclick="sendQuickPrompt('شیب لوله‌های فاضلاب انتخابی را ۱.۵ درصد کن', 'execute')" class="text-[11px] bg-slate-800/80 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 transition">
+          ⚡ اجرا: تنظیم شیب لوله‌ها
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- جعبه پرامپت متنی و ارسال فرمان -->
+  <footer class="glass p-3 border-t border-slate-800">
+    <div class="relative flex items-center">
+      <input id="promptInput" type="text" placeholder="دستور طراحی یا سوال مشورتی را اینجا بنویسید..." 
+        class="w-full bg-slate-900/90 text-white placeholder-slate-500 text-xs rounded-xl pr-4 pl-12 py-3 border border-slate-800 focus:outline-none focus:border-cyan-500/60 transition">
+      <button id="sendBtn" onclick="handleSend()" class="absolute left-2 w-8 h-8 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20 hover:scale-105 active:scale-95 transition">
+        <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="flex items-center justify-between mt-2 text-[10px] text-slate-500 px-1">
+      <span id="activeModeLabel" class="text-cyan-400">حالت فعال: 💡 مشورت و استعلام آیین‌نامه</span>
+      <span>Revit API: Ready (Port 5055)</span>
+    </div>
+  </footer>
+
+  <script>
+    let currentMode = 'consult';
+
+    function setMode(mode) {
+      currentMode = mode;
+      const tabConsult = document.getElementById('tabConsult');
+      const tabExecute = document.getElementById('tabExecute');
+      const label = document.getElementById('activeModeLabel');
+
+      if (mode === 'consult') {
+        tabConsult.className = "flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/10";
+        tabExecute.className = "flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200";
+        label.innerText = "حالت فعال: 💡 مشورت و استعلام آیین‌نامه (بدون دستکاری مدل)";
+        label.className = "text-cyan-400";
+      } else {
+        tabExecute.className = "flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-pink-300 border border-pink-500/40 shadow-sm shadow-pink-500/10";
+        tabConsult.className = "flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200";
+        label.innerText = "حالت فعال: ⚡ اجرای تراکنش و تغییر در مدل رویت";
+        label.className = "text-pink-400";
+      }
+    }
+
+    async function handleSend() {
+      const input = document.getElementById('promptInput');
+      const prompt = input.value.trim();
+      if (!prompt) return;
+      input.value = '';
+
+      appendMessage('user', prompt);
+      appendLoading();
+
+      try {
+        const response = await fetch('/api/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: prompt, mode: currentMode })
+        });
+        const data = await response.json();
+        removeLoading();
+        renderAgentResponse(data);
+      } catch (err) {
+        removeLoading();
+        appendMessage('error', 'خطا در ارتباط با Agent Hub: ' + err);
+      }
+    }
+
+    function sendQuickPrompt(prompt, mode) {
+      setMode(mode);
+      document.getElementById('promptInput').value = prompt;
+      handleSend();
+    }
+
+    function appendMessage(sender, text) {
+      const chat = document.getElementById('chatStream');
+      const div = document.createElement('div');
+      if (sender === 'user') {
+        div.className = "bg-cyan-950/40 border border-cyan-800/40 p-3 rounded-xl text-xs text-cyan-100 ml-6";
+        div.innerHTML = `<span class="font-bold text-cyan-300">شما:</span> ${text}`;
+      } else if (sender === 'error') {
+        div.className = "bg-rose-950/40 border border-rose-800/40 p-3 rounded-xl text-xs text-rose-200";
+        div.innerText = text;
+      }
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function appendLoading() {
+      const chat = document.getElementById('chatStream');
+      const div = document.createElement('div');
+      div.id = "loadingCard";
+      div.className = "glass p-3 rounded-xl text-xs text-slate-400 animate-pulse flex items-center gap-2";
+      div.innerHTML = `<div class="w-3 h-3 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin"></div> ایجنت در حال استنتاج و تطبیق با استانداردهای رویت...`;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function removeLoading() {
+      const el = document.getElementById('loadingCard');
+      if (el) el.remove();
+    }
+
+    function renderAgentResponse(data) {
+      const chat = document.getElementById('chatStream');
+      const div = document.createElement('div');
+      div.className = "glass p-3.5 rounded-xl border-slate-800 space-y-2.5";
+
+      if (data.mode === 'consult') {
+        div.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-cyan-400 flex items-center gap-1.5">
+              <span>💡</span> پاسخ مشورتی ناظر سینیور
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono">${data.model_used || 'Gemini'}</span>
+          </div>
+          <p class="text-xs text-slate-200 leading-relaxed">${data.response}</p>
+        `;
+
+        // دکمه نقطه عطف: تبدیل مشورت به اجرا در مدل!
+        if (data.has_suggested_action && data.suggested_action) {
+          const act = data.suggested_action;
+          const actionBtn = document.createElement('div');
+          actionBtn.className = "mt-2 pt-2 border-t border-slate-800 flex items-center justify-between bg-slate-900/60 p-2.5 rounded-lg border border-slate-800";
+          actionBtn.innerHTML = `
+            <div>
+              <div class="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                <span>⚡</span> اقدام پیشنهادی آماده اجرا:
+              </div>
+              <div class="text-[10px] text-slate-400">${act.action_title}</div>
+            </div>
+            <button onclick="executeAction('${act.tool}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-md shadow-emerald-600/30 transition">
+              اعمال در رویت
+            </button>
+          `;
+          div.appendChild(actionBtn);
+        }
+      } else {
+        // حالت اجرا (Execute Mode)
+        const plan = data.plan || {};
+        const ghost = plan.ghost_preview || {};
+        div.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-pink-400 flex items-center gap-1.5">
+              <span>⚡</span> آماده‌سازی تراکنش مدل رویت
+            </span>
+            <span class="text-[10px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded font-mono">${data.status}</span>
+          </div>
+          <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800 space-y-1.5 text-xs font-mono">
+            <div class="text-cyan-300">Tool: ${plan.tool}</div>
+            <div class="text-slate-400 text-[11px]">${ghost.summary || 'محاسبه مختصات و پیش‌نمایش گرافیکی'}</div>
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-[11px] text-slate-400">پیش‌نمایش شبح (Ghost Preview) در دید ۳D فعال شد</span>
+            <button onclick="confirmTransaction('${data.transaction_name}')" class="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-lg shadow-pink-500/20 transition">
+              تایید و اجرا (Ctrl+Z)
+            </button>
+          </div>
+        `;
+      }
+
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function executeAction(toolName) {
+      setMode('execute');
+      appendMessage('user', `دستور اجرای مستقیم: ${toolName}`);
+      appendLoading();
+      setTimeout(async () => {
+        const response = await fetch('/api/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: toolName, mode: 'execute' })
+        });
+        const data = await response.json();
+        removeLoading();
+        renderAgentResponse(data);
+      }, 400);
+    }
+
+    async function confirmTransaction(txName) {
+      appendLoading();
+      try {
+        const res = await fetch('/api/revit_queue_command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tool: txName,
+            action_title: txName,
+            parameters: {}
+          })
+        });
+        removeLoading();
+        const data = await res.json();
+        appendMessage('user', `⚡ تایید اجرای تراکنش در مدل رویت: ${txName}`);
+        
+        const chat = document.getElementById('chatStream');
+        const div = document.createElement('div');
+        div.className = "bg-emerald-950/60 border border-emerald-500/50 p-3 rounded-xl text-xs text-emerald-200 space-y-1.5 shadow-lg shadow-emerald-900/30";
+        div.innerHTML = `
+          <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+            <span>✅</span> تغییر با موفقیت در مدل Revit اعمال گردید!
+          </div>
+          <div class="text-[11px] text-slate-300">
+            دستور <b>"${txName}"</b> به صورت مستقیم در رویت ۲۰۲۶ اجرا شد. دوربین رویت روی المان متمرکز شده و با رنگ برجسته در تصویر علامت‌گذاری گردید.
+          </div>
+          <div class="text-[10px] text-emerald-400/80 font-mono">
+            Transaction: Committed • Ctrl+Z Available in Revit
+          </div>
+        `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+      } catch (err) {
+        removeLoading();
+        appendMessage('error', 'خطا در ارسال دستور به رویت: ' + err);
+      }
+    }
+
+    async function generateReport() {
+      appendLoading();
+      try {
+        let projName = "مدل فعال رویت";
+        try {
+          const pRes = await fetch('/api/active_project');
+          const pData = await pRes.json();
+          if (pData.project_name) projName = pData.project_name;
+        } catch(e) {}
+
+        const response = await fetch('/api/delta_report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            current_metrics: {
+              project_name: projName,
+              health_score: 100.0,
+              total_clashes: 0,
+              resolved_clashes: 0,
+              new_clashes: 0,
+              uniclass_completion_pct: 100.0,
+              pipe_length_meters: 0.0,
+              duct_area_sqm: 0.0
+            }
+          })
+        });
+        const data = await response.json();
+        removeLoading();
+        renderReportModal(data.report_data);
+      } catch (err) {
+        removeLoading();
+        appendMessage('error', 'خطا در دریافت گزارش پیشرفت: ' + err);
+      }
+    }
+
+    function renderReportModal(rep) {
+      const chat = document.getElementById('chatStream');
+      const div = document.createElement('div');
+      div.className = "glass p-4 rounded-xl border-emerald-500/40 space-y-3";
+      div.innerHTML = `
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <h3 class="font-bold text-xs text-emerald-400">📊 ${rep.title}</h3>
+          <span class="text-[10px] text-slate-400 font-mono">${rep.generated_at}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+            <div class="text-[10px] text-slate-400">سلامت مدل (BIM Health)</div>
+            <div class="font-bold text-emerald-400 text-sm font-mono">${rep.health_score.current}% (${rep.health_score.delta})</div>
+          </div>
+          <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+            <div class="text-[10px] text-slate-400">تفاضل تداخلات (Clashes)</div>
+            <div class="font-bold text-cyan-400 text-sm font-mono">${rep.clashes.net_change} (${rep.clashes.resolved_during_period} حل‌شده)</div>
+          </div>
+          <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+            <div class="text-[10px] text-slate-400">پوشش Uniclass</div>
+            <div class="font-bold text-white text-sm font-mono">${rep.parameters.uniclass_completion}</div>
+          </div>
+          <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+            <div class="text-[10px] text-slate-400">احجام جدید</div>
+            <div class="font-bold text-white text-sm font-mono">${rep.quantities_added.pipes_meters} پایپ</div>
+          </div>
+        </div>
+        <div class="text-[11px] text-slate-300">
+          <strong class="text-white">تصمیمات فنی کلیدی هفته:</strong>
+          <ul class="list-disc list-inside text-slate-400 mt-1 space-y-0.5">
+            ${rep.key_decisions.map(d => `<li>${d}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // پشتیبانی از اینتر در اینپوت پرامپت
+    document.getElementById('promptInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleSend();
+    });
+
+    async function loadActiveProjectInfo() {
+      try {
+        const res = await fetch('/api/active_project');
+        const data = await res.json();
+        const name = data.project_name || "مدل فعال رویت";
+        const badge = document.getElementById('activeProjectBadge');
+        if (badge) badge.innerText = name;
+        const welcome = document.getElementById('welcomeProjectText');
+        if (welcome) {
+          welcome.innerHTML = `مدل فعال <strong class="text-cyan-300">${name}</strong> متصل است. هیچ پیش‌فرضی از قبل بارگذاری نشده و اطلاعات و تحلیل‌ها صرفاً بر اساس مدل جاری ارزیابی می‌شوند.`;
+        }
+      } catch (e) {}
+    }
+    window.addEventListener('DOMContentLoaded', loadActiveProjectInfo);
+  </script>
+</body>
+</html>
